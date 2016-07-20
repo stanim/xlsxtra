@@ -1,0 +1,22 @@
+# https://github.com/codecov/example-go
+language: go
+
+go:
+  - 1.6
+  - tip
+
+before_install:
+  - go get github.com/golang/lint/golint
+
+install:
+  - go get -t -v ./...
+
+script:
+  - go build -v ./...
+  - go vet ./...
+	- go tool vet -shadow=true ./
+  - golint ./...
+  - go test -v -coverprofile=coverage.txt -covermode=atomic 
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
