@@ -106,15 +106,8 @@ type Data struct {
 	s       string
 }
 
-func TestCol(t *testing.T) {
-	var (
-		titles = []string{
-			"bool", "float", "formula", "int", "string"}
-		data = []Data{
-			{true, 3.14, "B2*2", 2, "monday, tuesday"},
-			{false, 3.14, "B2*2", 2, "€ 2.50"},
-		}
-	)
+func newSheet(t *testing.T, titles []string,
+	data []Data) *xlsx.Sheet {
 	sheet, err := xlsx.NewFile().AddSheet("Sheet1")
 	if err != nil {
 		t.Fatal(err)
@@ -135,10 +128,11 @@ func TestCol(t *testing.T) {
 	}
 	row := sheet.AddRow()
 	xlsxtra.AddBool(row, false)
-	col := xlsxtra.NewCol(header)
-	row1 := sheet.Rows[1]
-	row2 := sheet.Rows[2]
-	row3 := sheet.Rows[3]
+	return sheet
+}
+
+func checkBool(t *testing.T, data []Data, col xlsxtra.Col,
+	row1, row2 *xlsx.Row) {
 	// (bool)map
 	bmGot, err := col.BoolMap(row1, []string{"bool"})
 	if err != nil {
@@ -159,7 +153,10 @@ func TestCol(t *testing.T) {
 		t.Fatalf("Col.Bool: got \"%v\"; want \"%v\"",
 			bGot, bWant)
 	}
-	// float
+}
+
+func checkFloat(t *testing.T, data []Data, col xlsxtra.Col,
+	row1, row2 *xlsx.Row) {
 	fGot, err := col.Float(row1, "float")
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +179,10 @@ func TestCol(t *testing.T) {
 		t.Fatalf("Col.Float: got \"%v\"; want \"%v\"",
 			fGot, fWant)
 	}
-	// int
+}
+
+func checkInt(t *testing.T, data []Data, col xlsxtra.Col,
+	row1, row2 *xlsx.Row) {
 	iGot, err := col.Int(row1, "int")
 	if err != nil {
 		t.Fatal(err)
@@ -192,10 +192,14 @@ func TestCol(t *testing.T) {
 		t.Fatalf("Col.Int: got \"%d\"; want \"%d\"",
 			iGot, iWant)
 	}
+}
+
+func checkString(t *testing.T, data []Data, col xlsxtra.Col,
+	row1, row2 *xlsx.Row) {
 	// (string)floatMap
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
-	err = col.StringFloatMap(
+	err := col.StringFloatMap(
 		row1, "string", sfmGot, sWant, ", ", 3)
 	if err != nil {
 		t.Fatal(err)
@@ -205,21 +209,27 @@ func TestCol(t *testing.T) {
 		t.Fatalf("Col.Float: got \"%v\"; want \"%v\" (%#v)",
 			sGot, sWant, sfmGot)
 	}
+}
+
+func checkErrors(t *testing.T, data []Data, col xlsxtra.Col,
+	row1, row3 *xlsx.Row) {
+	sfmGot := make(map[string]float64)
+	sWant := 1.0
 	// out of range
-	iGot, err = col.Int(row3, "int")
+	_, err := col.Int(row3, "int")
 	if err == nil {
 		t.Fatal("col.Index: expected error out of range")
 	}
 	// not existing
-	bmGot, err = col.BoolMap(row1, []string{"not existing"})
+	_, err = col.BoolMap(row1, []string{"not existing"})
 	if err == nil {
 		t.Fatal("col.BoolMap: expected error for not existing")
 	}
-	fGot, err = col.Float(row1, "not existing")
+	_, err = col.Float(row1, "not existing")
 	if err == nil {
 		t.Fatal("col.Float: expected error for not existing")
 	}
-	iGot, err = col.Int(row1, "not existing")
+	_, err = col.Int(row1, "not existing")
 	if err == nil {
 		t.Fatal("col.Int: expected error for not existing")
 	}
@@ -228,7 +238,9 @@ func TestCol(t *testing.T) {
 	if err == nil {
 		t.Fatal("col.StringFloatMap: expected error for not existing")
 	}
-	// style
+}
+
+func checkStyle(t *testing.T, row1 *xlsx.Row) {
 	style := xlsxtra.NewStyle(
 		"", // color
 		&xlsx.Font{Size: 10, Name: "Arial", Bold: true},
@@ -268,6 +280,31 @@ func TestCol(t *testing.T) {
 	if !style.ApplyAlignment {
 		t.Fatal("NewStyle: ApplyAlignment expected")
 	}
+}
+
+func TestCol(t *testing.T) {
+	var (
+		titles = []string{
+			"bool", "float", "formula", "int", "string"}
+		data = []Data{
+			{true, 3.14, "B2*2", 2, "monday, tuesday"},
+			{false, 3.14, "B2*2", 2, "€ 2.50"},
+		}
+	)
+	// create sheet
+	sheet := newSheet(t, titles, data)
+	header := sheet.Rows[0]
+	row1 := sheet.Rows[1]
+	row2 := sheet.Rows[2]
+	row3 := sheet.Rows[3]
+	col := xlsxtra.NewCol(header)
+	// check
+	checkBool(t, data, col, row1, row2)
+	checkFloat(t, data, col, row1, row2)
+	checkInt(t, data, col, row1, row2)
+	checkString(t, data, col, row1, row2)
+	checkErrors(t, data, col, row1, row3)
+	checkStyle(t, row1)
 }
 
 func TestNewStyles(t *testing.T) {
