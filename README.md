@@ -8,13 +8,15 @@
 
 This was developed as an extension for the
 [xlsx](https://github.com/tealeg/xlsx)
-package. It contains the following utilities:
+package. It contains the following utilities to manipulate 
+excel files:
 
 - `AddBool()`, `AddInt()`, `AddFloat()`, ...: shortcut to add a cell to a row with the right type.
 - `NewStyle()`: create a style and set the `ApplyFill`, `ApplyFont`, `ApplyBorder` and `ApplyAlignment` automatically.
 - `NewStyles()`: create a slice of styles based on a color palette
 - `Sheets`: access sheets by name instead of by index
 - `Col`: access cell values of a row by column header title
+- `SetRowStyle`: set style of all cells in a row
 - `ToString`: convert a xlsx.Row to a slice of strings
 
 ### Example
