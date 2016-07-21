@@ -6,179 +6,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/stanim/sortstr"
 	"github.com/tealeg/xlsx"
 )
 
-// Default fonts and styles
-var (
-	BoldFont = &xlsx.Font{
-		Size: 10, Name: "Arial", Bold: true}
-	BoldStyle   = NewStyle("", BoldFont, nil, nil)
-	HeaderStyle = NewStyle("00CCCCCC", BoldFont, nil, nil)
-	WrapText    = &xlsx.Alignment{
-		Horizontal:   "general",
-		Vertical:     "bottom",
-		Indent:       0,
-		ShrinkToFit:  false,
-		TextRotation: 0,
-		WrapText:     true}
-	WrapStyle = NewStyle("", nil, nil, WrapText)
-	// http://www.color-hex.com/color-palette/20772
-	Palette = []string{
-		"00ffaeae",
-		"00ffc49c",
-		"00fffb96",
-		"00caff7e",
-		"009bf9bd",
-	}
-	PaletteStyles = NewStyles(Palette, BoldFont,
-		nil, nil)
-)
-
-// Tabs retrieves a sheet by label
-type Tabs struct {
-	sheets   map[string]*xlsx.Sheet
-	filename string
-}
-
-// NewTabs creates new tabs from sheet names of an already
-// opened xlsx.File
-func NewTabs(file *xlsx.File, fn string) *Tabs {
-	tabs := Tabs{
-		sheets:   make(map[string]*xlsx.Sheet),
-		filename: fn,
-	}
-	for _, sheet := range file.Sheets {
-		tabs.sheets[sheet.Name] = sheet
-	}
-	return &tabs
-}
-
-// OpenTabs opens an xlsx file from disk and returns its
-// tabs
-func OpenTabs(fn string) (*Tabs, error) {
-	xlFile, err := xlsx.OpenFile(fn)
-	if err != nil {
-		return nil, err
-	}
-	return NewTabs(xlFile, fn), nil
-}
-
-// Get returns a certain tab sheet
-func (t Tabs) Get(name string) (*xlsx.Sheet, error) {
-	sheet, ok := t.sheets[name]
-	if !ok {
-		return nil, fmt.Errorf(
-			"file %q does not contain sheet %q",
-			t.filename, name)
-	}
-	return sheet, nil
-}
-
-// OpenSheet open a sheet from an xlsx file. If you need
-// to use multiple sheets from one file use the Tabs type
-// instead.
-func OpenSheet(fn string, name string) (
-	*xlsx.Sheet, error) {
-	tabs, err := OpenTabs(fn)
-	if err != nil {
-		return nil, err
-	}
-	return tabs.Get(name)
-}
-
-// Col retrieves values by header label from a row
-type Col map[string]int
-
-// NewCol creates a new Col from a header row
-func NewCol(row *xlsx.Row) Col {
-	col := make(Col)
+// ToString converts row to string slice
+func ToString(row *xlsx.Row) []string {
+	s := make([]string, len(row.Cells))
 	for i, cell := range row.Cells {
-		if cell.Value != "" {
-			col[cell.Value] = i
-		}
+		s[i] = cell.Value
 	}
-	return col
-}
-
-func (c Col) index(
-	row *xlsx.Row, header string) (int, error) {
-	if i, ok := c[header]; ok {
-		if i < len(row.Cells) {
-			return i, nil
-		}
-		return i, fmt.Errorf(
-			"Index %d out of range for column header: %s (first column: %s)\nTry to set a value in a column to the far right.",
-			i, header, row.Cells[0].Value)
-	}
-	return 0, fmt.Errorf("Unknown column header: %s (%#v)",
-		header, c)
-}
-
-// Bool value of (row,col) in spreadsheet
-func (c Col) Bool(row *xlsx.Row, header string) (bool,
-	error) {
-	val, err := c.String(row, header)
-	if err != nil {
-		return false, err
-	}
-	val = strings.ToLower(val)
-	return val == "ja" || val == "yes", nil
-}
-
-// BoolMap value of (row,col) in spreadsheet
-func (c Col) BoolMap(row *xlsx.Row, headers []string) (
-	map[string]bool, error) {
-	var err error
-	bmap := make(map[string]bool)
-	for _, header := range headers {
-		bmap[header], err = c.Bool(row, header)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return bmap, nil
-}
-
-// Int value of (row,col) in spreadsheet
-func (c Col) Int(row *xlsx.Row, header string) (int,
-	error) {
-	i, err := c.index(row, header)
-	if err != nil {
-		return 0, err
-	}
-	return row.Cells[i].Int()
-}
-
-// Float value of (row,col) in spreadsheet
-func (c Col) Float(row *xlsx.Row, header string) (float64,
-	error) {
-	i, err := c.index(row, header)
-	if err != nil {
-		return 0, err
-	}
-	val := row.Cells[i].Value
-	if strings.HasPrefix(val, "€") {
-		val = strings.TrimLeft(val, "€ ")
-	}
-	f, err := strconv.ParseFloat(val, 64)
-	if err != nil {
-		return math.NaN(), err
-	}
-	return f, nil
-}
-
-// String value of (row,col) in spreadsheet
-func (c Col) String(row *xlsx.Row, header string) (string,
-	error) {
-	i, err := c.index(row, header)
-	if err != nil {
-		return "", err
-	}
-	if i >= len(row.Cells) {
-		return "", nil
-	}
-	return row.Cells[i].String()
+	return s
 }
 
 // AddBool adds a cell with bool as 1 or 0 to a row
@@ -221,6 +59,157 @@ func AddString(row *xlsx.Row, x string) *xlsx.Cell {
 	cell := row.AddCell()
 	cell.SetString(x)
 	return cell
+}
+
+// Sheets retrieves a sheet by name
+type Sheets struct {
+	sheets   map[string]*xlsx.Sheet
+	filename string
+}
+
+// NewSheets creates a map of sheets by name of an already
+// opened xlsx.File
+func NewSheets(file *xlsx.File, fn string) *Sheets {
+	tabs := Sheets{
+		sheets:   make(map[string]*xlsx.Sheet),
+		filename: fn,
+	}
+	for _, sheet := range file.Sheets {
+		tabs.sheets[sheet.Name] = sheet
+	}
+	return &tabs
+}
+
+// OpenSheets opens an xlsx file from disk and returns its
+// sheets by name
+func OpenSheets(fn string) (*Sheets, error) {
+	xlFile, err := xlsx.OpenFile(fn)
+	if err != nil {
+		return nil, err
+	}
+	return NewSheets(xlFile, fn), nil
+}
+
+// Get returns a certain sheet by name. It returns an
+// error if a sheet does not exist.
+func (t Sheets) Get(name string) (*xlsx.Sheet, error) {
+	sheet, ok := t.sheets[name]
+	if !ok {
+		return nil, fmt.Errorf(
+			"file %q does not contain sheet %q",
+			t.filename, name)
+	}
+	return sheet, nil
+}
+
+// OpenSheet open a sheet from an xlsx file. If you need
+// to use multiple sheets from one file use the Sheets type
+// instead.
+func OpenSheet(fn string, name string) (
+	*xlsx.Sheet, error) {
+	tabs, err := OpenSheets(fn)
+	if err != nil {
+		return nil, err
+	}
+	return tabs.Get(name)
+}
+
+// Col retrieves values by header label from a row
+type Col struct {
+	headers sortstr.Headers
+}
+
+// NewCol creates a new Col from a header row
+func NewCol(row *xlsx.Row) Col {
+	return Col{
+		headers: sortstr.NewHeaders(ToString(row)),
+	}
+}
+
+func (c Col) index(
+	row *xlsx.Row, title string) (int, error) {
+	i, err := c.headers.Index(title)
+	if err != nil {
+		return 0, err
+	}
+	i-- // headers is one based
+	if i < len(row.Cells) {
+		return i, nil
+	}
+	return i, fmt.Errorf(
+		`Index %d out of range for column title: %s
+Try to set a value in a column to the far right.
+[%s]`,
+		i, title, strings.Join(ToString(row), "|"))
+}
+
+// Bool value of (row,col) in spreadsheet
+func (c Col) Bool(row *xlsx.Row, header string) (bool,
+	error) {
+	val, err := c.String(row, header)
+	if err != nil {
+		return false, err
+	}
+	val = strings.ToLower(val)
+	return val == "ja" || val == "yes" || val == "1", nil
+}
+
+// BoolMap value of (row,col) in spreadsheet
+func (c Col) BoolMap(row *xlsx.Row, headers []string) (
+	map[string]bool, error) {
+	var err error
+	bmap := make(map[string]bool)
+	for _, header := range headers {
+		bmap[header], err = c.Bool(row, header)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return bmap, nil
+}
+
+// Int value of (row,col) in spreadsheet
+func (c Col) Int(row *xlsx.Row, header string) (int,
+	error) {
+	i, err := c.index(row, header)
+	if err != nil {
+		return 0, err
+	}
+	return row.Cells[i].Int()
+}
+
+// Float value of (row,col) in spreadsheet
+func (c Col) Float(row *xlsx.Row, header string) (float64,
+	error) {
+	i, err := c.index(row, header)
+	if err != nil {
+		return 0, err
+	}
+	val := row.Cells[i].Value
+	if strings.HasPrefix(val, "€") ||
+		strings.HasPrefix(val, "$") {
+		val = strings.TrimLeft(val, "€$ ")
+	}
+	f, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		return math.NaN(), err
+	}
+	return f, nil
+}
+
+// String value of (row,col) in spreadsheet
+func (c Col) String(row *xlsx.Row, header string) (string,
+	error) {
+	i, err := c.index(row, header)
+	if err != nil {
+		return "", err
+	}
+	/** unreachable code fix this for all
+		if i >= len(row.Cells) {
+			return "", nil
+		}
+	**/
+	return row.Cells[i].String()
 }
 
 // StringFloatMap converts column with days string into
@@ -285,8 +274,8 @@ func NewStyles(colors []string, font *xlsx.Font,
 	return styles
 }
 
-// SetStyleRow set style to all cells of a row
-func SetStyleRow(row *xlsx.Row, style *xlsx.Style) {
+// SetRowStyle set style to all cells of a row
+func SetRowStyle(row *xlsx.Row, style *xlsx.Style) {
 	for _, cell := range row.Cells {
 		cell.SetStyle(style)
 	}
