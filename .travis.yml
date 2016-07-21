@@ -7,6 +7,10 @@ go:
 
 before_install:
   - go get github.com/golang/lint/golint
+  - go get github.com/kisielk/errcheck
+  - go get github.com/fzipp/gocyclo
+  - go get github.com/gordonklaus/ineffassign
+  - go get github.com/client9/misspell/cmd/misspell
 
 install:
   - go get -t -v ./...
@@ -16,7 +20,11 @@ script:
   - go vet ./...
   - go tool vet -shadow=true ./
   - golint ./...
-  - go test -v -coverprofile=coverage.txt -covermode=atomic 
+  - go test -v -coverprofile=coverage.txt -covermode=atomic
+  - errcheck ./...
+  - gocyclo -over 15 .
+  - ineffassign .
+  - misspell ./...
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
