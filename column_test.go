@@ -41,10 +41,10 @@ func ExampleCol() {
 	for i, item := range items {
 		row = sheet.AddRow()
 		xlsxtra.AddString(row, item.Name)
-		xlsxtra.AddFloat(row, item.Price, "0.00")
+		xlsxtra.AddFloat(row, "0.00", item.Price)
 		xlsxtra.AddInt(row, item.Amount)
-		xlsxtra.AddFormula(row,
-			fmt.Sprintf("B%d*C%d", i+1, i+1), "0.00")
+		xlsxtra.AddFormula(row, "0.00",
+			fmt.Sprintf("B%d*C%d", i+1, i+1))
 	}
 	// column Col type
 	col := xlsxtra.NewCol(header)
@@ -80,8 +80,8 @@ func newSheet(t *testing.T, titles []string,
 	for _, d := range data {
 		row := sheet.AddRow()
 		xlsxtra.AddBool(row, d.b)
-		xlsxtra.AddFloat(row, d.f, "0.00")
-		xlsxtra.AddFormula(row, d.formula, "0.0")
+		xlsxtra.AddFloat(row, "0.00", d.f)
+		xlsxtra.AddFormula(row, "0.00", d.formula)
 		xlsxtra.AddInt(row, d.i)
 		xlsxtra.AddString(row, d.s)
 	}
