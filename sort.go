@@ -12,7 +12,9 @@ var (
 	reNr = regexp.MustCompile(`\d+([.]\d+)?`)
 )
 
-// Sort sheet rows according to multi column
+// Sort sheet rows according to multi column. (Note that
+// columns are one based, not zero based to make reverse
+// sort possible.)
 func Sort(sheet *xlsx.Sheet, start, end int,
 	columns ...int) {
 	m := NewMultiColumnSort(sheet, start, end)
@@ -20,7 +22,8 @@ func Sort(sheet *xlsx.Sheet, start, end int,
 }
 
 // SortByHeaders sort sheet rows by multiple column header
-// titles
+// titles. (If a header title is prefixed by "-", it will
+// be reversed sorted.)
 func SortByHeaders(sheet *xlsx.Sheet, start, end int,
 	headers Headers, titles ...string) error {
 	indices, err := headers.Indices(titles...)

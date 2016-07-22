@@ -2,7 +2,7 @@
 // package (https://github.com/tealeg/xlsx) to manipulate
 // excel files:
 //
-// - Sort(), SortByHeaders: multi-column sort of selected rows
+// - Sort(), SortByHeaders: multi-column (reverse) sort of selected rows. (Note that columns are one based, not zero based to make reverse sort possible.)
 //
 // - AddBool(), AddInt(), AddFloat(), ...: shortcut to add
 // a cell to a row with the right type.

@@ -11,7 +11,7 @@ This was developed as an extension for the
 package. It contains the following utilities to manipulate 
 excel files:
 
-- `Sort()`, `SortByHeaders`: multi-column sort of selected rows
+- `Sort()`, `SortByHeaders`: multi-column (reverse) sort of selected rows (Note that columns are one based, not zero based to make reverse sort possible.)
 - `AddBool()`, `AddInt()`, `AddFloat()`, ...: shortcut to add a cell to a row with the right type.
 - `NewStyle()`: create a style and set the `ApplyFill`, `ApplyFont`, `ApplyBorder` and `ApplyAlignment` automatically.
 - `NewStyles()`: create a slice of styles based on a color palette

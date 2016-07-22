@@ -19,7 +19,7 @@ func ExampleSort() {
 	// multi column sort
 	xlsxtra.Sort(sheet, 1, -1,
 		3,  // last name
-		-2, // first name
+		-2, // first name (reverse order)
 		7,  // test empty column
 		6,  // ip address
 	)
@@ -30,7 +30,7 @@ func ExampleSort() {
 	// by header
 	headers := xlsxtra.NewHeaders(sheet.Rows[0])
 	err = xlsxtra.SortByHeaders(sheet, 1, -1, headers,
-		"-amount",
+		"-amount", // reverse order
 		"first_name",
 	)
 	if err != nil {
