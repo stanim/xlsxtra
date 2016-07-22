@@ -8,21 +8,6 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-func ExampleToString() {
-	titles := []string{"Rob", "Robert", "Ken"}
-	sheet, err := xlsx.NewFile().AddSheet("Sheet1")
-	if err != nil {
-		fmt.Println(err)
-	}
-	row := sheet.AddRow()
-	for _, title := range titles {
-		row.AddCell().SetString(title)
-	}
-	fmt.Printf("%v", xlsxtra.ToString(row))
-	// Output:
-	// [Rob Robert Ken]
-}
-
 func ExampleCol() {
 	type Item struct {
 		Name   string
@@ -70,32 +55,6 @@ func ExampleCol() {
 	}
 	fmt.Println(price)
 	// Output: 6.45
-}
-
-func TestOpenSheet(t *testing.T) {
-	sheet, err := xlsxtra.OpenSheet(
-		"xlsxtra_test.xlsx", "foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	row := sheet.Rows[0]
-	want := "hello"
-	got := row.Cells[0].Value
-	if got != want {
-		t.Errorf("Got %q; want %q in first cell", got, want)
-	}
-	// file does not exist
-	sheet, err = xlsxtra.OpenSheet(
-		"xlsxtra_not_existing.xlsx", "foo")
-	if err == nil {
-		t.Error("Error missing for opening not existing file")
-	}
-	// sheet does not exist
-	sheet, err = xlsxtra.OpenSheet(
-		"xlsxtra_test.xlsx", "not exist")
-	if err == nil {
-		t.Error("Error missing for opening not existing sheet")
-	}
 }
 
 type Data struct {
@@ -194,8 +153,8 @@ func checkInt(t *testing.T, data []Data, col xlsxtra.Col,
 	}
 }
 
-func checkString(t *testing.T, data []Data, col xlsxtra.Col,
-	row1, row2 *xlsx.Row) {
+func checkString(t *testing.T, data []Data,
+	col xlsxtra.Col, row1, row2 *xlsx.Row) {
 	// (string)floatMap
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
@@ -211,8 +170,8 @@ func checkString(t *testing.T, data []Data, col xlsxtra.Col,
 	}
 }
 
-func checkErrors(t *testing.T, data []Data, col xlsxtra.Col,
-	row1, row3 *xlsx.Row) {
+func checkErrors(t *testing.T, data []Data,
+	col xlsxtra.Col, row1, row3 *xlsx.Row) {
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
 	// out of range
@@ -240,48 +199,6 @@ func checkErrors(t *testing.T, data []Data, col xlsxtra.Col,
 	}
 }
 
-func checkStyle(t *testing.T, row1 *xlsx.Row) {
-	style := xlsxtra.NewStyle(
-		"", // color
-		&xlsx.Font{Size: 10, Name: "Arial", Bold: true},
-		xlsx.NewBorder("thin", "thin", "thin", "thin"),
-		&xlsx.Alignment{
-			Horizontal:   "general",
-			Indent:       0,
-			ShrinkToFit:  false,
-			TextRotation: 0,
-			Vertical:     "top",
-			WrapText:     false,
-		},
-	)
-	if style.ApplyFill {
-		t.Fatal("NewStyle: ApplyFill not expected")
-	}
-	if !style.ApplyFont {
-		t.Fatal("NewStyle: ApplyFont expected")
-	}
-	if !style.ApplyBorder {
-		t.Fatal("NewStyle: ApplyBorder expected")
-	}
-	if !style.ApplyAlignment {
-		t.Fatal("NewStyle: ApplyAlignment expected")
-	}
-	xlsxtra.SetRowStyle(row1, style)
-	style = row1.Cells[0].GetStyle()
-	if style.ApplyFill {
-		t.Fatal("NewStyle: ApplyFill not expected")
-	}
-	if !style.ApplyFont {
-		t.Fatal("NewStyle: ApplyFont expected")
-	}
-	if !style.ApplyBorder {
-		t.Fatal("NewStyle: ApplyBorder expected")
-	}
-	if !style.ApplyAlignment {
-		t.Fatal("NewStyle: ApplyAlignment expected")
-	}
-}
-
 func TestCol(t *testing.T) {
 	var (
 		titles = []string{
@@ -304,22 +221,4 @@ func TestCol(t *testing.T) {
 	checkInt(t, data, col, row1, row2)
 	checkString(t, data, col, row1, row2)
 	checkErrors(t, data, col, row1, row3)
-	checkStyle(t, row1)
-}
-
-func TestNewStyles(t *testing.T) {
-	rgb := []string{"00ff0000", "0000ff00", "000000ff"}
-	styles := xlsxtra.NewStyles(rgb, nil, nil, nil)
-	sGot := styles[0].Fill.FgColor
-	sWant := rgb[0]
-	if sGot != sWant {
-		t.Fatalf("NewStyles: got %q; want %q", sGot, sWant)
-	}
-	bGot := styles[0].ApplyFill
-	bWant := true
-	if bGot != bWant {
-		t.Fatalf(
-			"NewStyles: ApplyFill got \"%v\"; want \"%v\"",
-			bGot, bWant)
-	}
 }
