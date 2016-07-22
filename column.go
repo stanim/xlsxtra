@@ -6,19 +6,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/stanim/sortstr"
 	"github.com/tealeg/xlsx"
 )
 
 // Col retrieves values by header label from a row
 type Col struct {
-	headers sortstr.Headers
+	headers Headers
 }
 
 // NewCol creates a new Col from a header row
 func NewCol(row *xlsx.Row) Col {
 	return Col{
-		headers: sortstr.NewHeaders(ToString(row)),
+		headers: NewHeaders(row),
 	}
 }
 

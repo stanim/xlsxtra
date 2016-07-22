@@ -1,9 +1,15 @@
 package xlsxtra
 
 import (
+	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/tealeg/xlsx"
+)
+
+var (
+	reNr = regexp.MustCompile(`\d+([.]\d+)?`)
 )
 
 // Sort sheet rows according to multi column
@@ -11,6 +17,19 @@ func Sort(sheet *xlsx.Sheet, start, end int,
 	columns ...int) {
 	m := NewMultiColumnSort(sheet, start, end)
 	m.Sort(columns...)
+}
+
+// SortByHeaders sort sheet rows by multiple column header
+// titles
+func SortByHeaders(sheet *xlsx.Sheet, start, end int,
+	headers Headers, titles ...string) error {
+	indices, err := headers.Indices(titles...)
+	if err != nil {
+		return err
+	}
+	m := NewMultiColumnSort(sheet, start, end)
+	m.Sort(indices...)
+	return nil
 }
 
 // MultiColumnSort implements the Sort interface. It
@@ -62,6 +81,9 @@ func (m *MultiColumnSort) Swap(i, j int) {
 func get(row *xlsx.Row, col int) string {
 	if col < len(row.Cells) {
 		s, _ := row.Cells[col].String()
+		if strings.HasPrefix(s, "€") || strings.HasPrefix(s, "$") {
+			s = strings.TrimLeft(s, "€$ ")
+		}
 		return s
 	}
 	return ""
@@ -87,10 +109,22 @@ func (m *MultiColumnSort) Less(i, j int) bool {
 	var c int
 	for c = 0; c < len(m.Columns)-1; c++ {
 		index, reverse := getReverse(m.Columns[c])
+		a := get(p, index)
+		b := get(q, index)
+		if reNr.MatchString(a) && reNr.MatchString(b) {
+			na, nb := len(a), len(b)
+			if na != nb {
+				if na < nb {
+					a = strings.Repeat("0", nb-na) + a
+				} else {
+					b = strings.Repeat("0", na-nb) + b
+				}
+			}
+		}
 		switch {
-		case get(p, index) < get(q, index):
+		case a < b:
 			return !reverse
-		case get(q, index) < get(p, index):
+		case b < a:
 			return reverse
 		}
 		// p == q; try the next comparison.
