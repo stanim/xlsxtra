@@ -15,12 +15,19 @@ func AddBool(row *xlsx.Row, x ...bool) *xlsx.Cell {
 	return cell
 }
 
+// AddEmpty adds n empty cells to a row
+func AddEmpty(row *xlsx.Row, n int) {
+	for i := 0; i < n; i++ {
+		row.AddCell()
+	}
+}
+
 // AddFloat adds a cell with float64 value to a row
 func AddFloat(row *xlsx.Row, format string, x ...float64,
 ) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range x {
-		cell := row.AddCell()
+		cell = row.AddCell()
 		cell.SetFloatWithFormat(y, format)
 	}
 	return cell
@@ -31,7 +38,7 @@ func AddFormula(row *xlsx.Row, format string,
 	formula ...string) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range formula {
-		cell := row.AddCell()
+		cell = row.AddCell()
 		cell.SetFormula(y)
 		cell.NumFmt = format
 	}

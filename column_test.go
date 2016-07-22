@@ -84,6 +84,7 @@ func newSheet(t *testing.T, titles []string,
 		xlsxtra.AddFormula(row, "0.00", d.formula)
 		xlsxtra.AddInt(row, d.i)
 		xlsxtra.AddString(row, d.s)
+		xlsxtra.AddEmpty(row, 2)
 	}
 	row := sheet.AddRow()
 	xlsxtra.AddBool(row, false)
@@ -151,10 +152,19 @@ func checkInt(t *testing.T, data []Data, col xlsxtra.Col,
 		t.Fatalf("Col.Int: got \"%d\"; want \"%d\"",
 			iGot, iWant)
 	}
+	iGot, err = col.Int(row2, "int")
+	if err != nil {
+		t.Fatal(err)
+	}
+	iWant = data[1].i
+	if iGot != iWant {
+		t.Fatalf("Col.Int: got \"%d\"; want \"%d\"",
+			iGot, iWant)
+	}
 }
 
 func checkString(t *testing.T, data []Data,
-	col xlsxtra.Col, row1, row2 *xlsx.Row) {
+	col xlsxtra.Col, row1 *xlsx.Row) {
 	// (string)floatMap
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
@@ -165,8 +175,24 @@ func checkString(t *testing.T, data []Data,
 	}
 	sGot := sfmGot["mon"]
 	if sGot != sWant {
-		t.Fatalf("Col.Float: got \"%v\"; want \"%v\" (%#v)",
+		t.Fatalf(
+			"Col.StringFloatMap: got \"%v\"; want \"%v\" (%#v)",
 			sGot, sWant, sfmGot)
+	}
+}
+
+func checkEmpty(t *testing.T, col xlsxtra.Col,
+	row1 *xlsx.Row) {
+	for _, empty := range []string{"empty1", "empty2"} {
+		sGot, err := col.String(row1, empty)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sWant := ""
+		if sGot != sWant {
+			t.Fatalf("Empty: got %q; want %q",
+				sGot, sWant)
+		}
 	}
 }
 
@@ -202,7 +228,8 @@ func checkErrors(t *testing.T, data []Data,
 func TestCol(t *testing.T) {
 	var (
 		titles = []string{
-			"bool", "float", "formula", "int", "string"}
+			"bool", "float", "formula", "int", "string",
+			"empty1", "empty2"}
 		data = []Data{
 			{true, 3.14, "B2*2", 2, "monday, tuesday"},
 			{false, 3.14, "B2*2", 2, "€ 2.50"},
@@ -219,6 +246,7 @@ func TestCol(t *testing.T) {
 	checkBool(t, data, col, row1, row2)
 	checkFloat(t, data, col, row1, row2)
 	checkInt(t, data, col, row1, row2)
-	checkString(t, data, col, row1, row2)
+	checkString(t, data, col, row1)
+	checkEmpty(t, col, row1)
 	checkErrors(t, data, col, row1, row3)
 }
