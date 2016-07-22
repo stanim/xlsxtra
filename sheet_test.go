@@ -8,7 +8,7 @@ import (
 
 func TestOpenSheet(t *testing.T) {
 	sheet, err := xlsxtra.OpenSheet(
-		"xlsxtra_test.xlsx", "foo")
+		"xlsxtra_test.xlsx", "sheet_test.go")
 	if err != nil {
 		t.Fatal(err)
 	}
