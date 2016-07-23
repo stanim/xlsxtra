@@ -64,8 +64,14 @@ func RangeBounds(s string) (int, int, int, int, error) {
 	}
 	minCol := StrCol[m[1]]
 	minRow, _ := strconv.Atoi(m[2])
-	maxCol := StrCol[m[4]]
-	maxRow, _ := strconv.Atoi(m[5])
+	var maxCol, maxRow int // m[4], m[5]
+	if m[4] != "" && m[5] != "" {
+		maxCol = StrCol[m[4]]
+		maxRow, _ = strconv.Atoi(m[5])
+	} else {
+		maxCol = minCol
+		maxRow = minRow
+	}
 	return minCol, minRow, maxCol, maxRow, nil
 }
 
