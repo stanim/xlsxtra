@@ -16,7 +16,7 @@ func TestSplitCoord(t *testing.T) {
 		t.Fatalf("expected \"AA\" and 11; got %q and %d",
 			column, row)
 	}
-	column, row, err = xlsxtra.SplitCoord("A0")
+	_, _, err = xlsxtra.SplitCoord("A0")
 	if err == nil {
 		t.Fatal("expected error")
 	}
