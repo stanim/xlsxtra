@@ -27,6 +27,16 @@ func Example() {
 	// Output: Z 27
 }
 
+func ExampleAbs() {
+	fmt.Println(xlsxtra.Abs("B12"))
+	fmt.Println(xlsxtra.Abs("C5:G20"))
+	fmt.Println(xlsxtra.Abs("Invalid"))
+	// Output:
+	// $B$12
+	// $C$5:$G$20
+	// Invalid
+}
+
 func ExampleRangeBounds() {
 	fmt.Println(xlsxtra.RangeBounds("A1:E6"))
 	fmt.Println(xlsxtra.RangeBounds("$A$1:$E$6"))

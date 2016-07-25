@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	rangeExpr = `[$]?(?P<min_col>[A-Z]+)[$]?(?P<min_row>[1-9]\d*)(:[$]?(?P<max_col>[A-Z]+)[$]?(?P<max_row>[1-9]\d*))?`
+	maxCol    = 18279
+	rangeExpr = `[$]?([A-Z]+)[$]?([1-9]\d*)(:[$]?([A-Z]+)[$]?([1-9]\d*))?`
 )
 
 var (
 	// ColStr maps an integer column index to its name
-	ColStr = make(map[int]string)
+	ColStr [maxCol]string
 	// StrCol maps a column name to its integer index
 	StrCol  = make(map[string]int)
 	reCoord = regexp.MustCompile(
@@ -37,6 +38,16 @@ func SplitCoord(coord string) (string, int, error) {
 	return column, row, nil
 }
 
+func init() {
+	var col string
+	ColStr[0] = "?"
+	for i := 1; i < maxCol; i++ {
+		col = colStr(i)
+		ColStr[i] = col
+		StrCol[col] = i
+	}
+}
+
 func colStr(i int) string {
 	letters := []string{}
 	for i > 0 {
@@ -51,6 +62,20 @@ func colStr(i int) string {
 			[]string{string(mod + 64)}, letters...)
 	}
 	return strings.Join(letters, "")
+}
+
+// Abs converts a coordinate to an absolute coordinate
+// (An invalid string is returned unaltered.)
+func Abs(s string) string {
+	m := reRange.FindStringSubmatch(s)
+	if m == nil {
+		return s
+	}
+	if m[4] == "" || m[5] == "" {
+		return fmt.Sprintf("$%s$%s", m[1], m[2])
+	}
+	return fmt.Sprintf("$%s$%s:$%s$%s",
+		m[1], m[2], m[4], m[5])
 }
 
 // RangeBounds converts a range string into boundaries:
@@ -73,13 +98,4 @@ func RangeBounds(s string) (int, int, int, int, error) {
 		maxRow = minRow
 	}
 	return minCol, minRow, maxCol, maxRow, nil
-}
-
-func init() {
-	var col string
-	for i := 1; i < 18279; i++ {
-		col = colStr(i)
-		ColStr[i] = col
-		StrCol[col] = i
-	}
 }
