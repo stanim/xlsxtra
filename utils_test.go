@@ -5,7 +5,16 @@ import (
 	"testing"
 
 	"github.com/stanim/xlsxtra"
+	"github.com/tealeg/xlsx"
 )
+
+func ExampleColRange() {
+	fmt.Println(xlsxtra.ColRange("X", "AD"))
+	fmt.Println(xlsxtra.ColRange("1", "AD"))
+	// Output:
+	// [X Y Z AA AB AC AD]
+	// []
+}
 
 func TestSplitCoord(t *testing.T) {
 	column, row, err := xlsxtra.SplitCoord("AA11")
@@ -25,6 +34,48 @@ func TestSplitCoord(t *testing.T) {
 func Example() {
 	fmt.Println(xlsxtra.ColStr[26], xlsxtra.StrCol["AA"])
 	// Output: Z 27
+}
+
+func ExampleGetCell() {
+	file := xlsx.NewFile()
+	sheet, err := file.AddSheet("Sheet")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	row := sheet.AddRow()
+	cell := row.AddCell()
+	cell.Value = "I am a cell!"
+	cell, err = xlsxtra.GetCell(sheet, "A1")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(cell.Value)
+	// Output: I am a cell!
+}
+
+func TestGetCell(t *testing.T) {
+	file := xlsx.NewFile()
+	sheet, err := file.AddSheet("Sheet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := sheet.AddRow()
+	cell := row.AddCell()
+	cell.Value = "I am a cell!"
+	cell, err = xlsxtra.GetCell(sheet, "A2")
+	if err == nil {
+		t.Fatal("Expected error: row \"A2\" out of range")
+	}
+	cell, err = xlsxtra.GetCell(sheet, "B1")
+	if err == nil {
+		t.Fatal("Expected error: column \"B1\" out of range")
+	}
+	cell, err = xlsxtra.GetCell(sheet, "ZZZZ")
+	if err == nil {
+		t.Fatal("Expected error: column \"ZZZZ\" out of range")
+	}
 }
 
 func ExampleAbs() {

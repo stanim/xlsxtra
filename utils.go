@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/tealeg/xlsx"
 )
 
 const (
@@ -23,6 +25,21 @@ var (
 	reRange = regexp.MustCompile(
 		fmt.Sprintf("^%s$", rangeExpr))
 )
+
+// ColRange gives a range of intervals.
+// (Returns empty slice for invalid input.)
+func ColRange(start, end string) []string {
+	s := StrCol[start]
+	e := StrCol[end] + 1
+	if s == 0 || e == 1 {
+		return nil
+	}
+	r := make([]string, e-s)
+	for i := s; i < e; i++ {
+		r[i-s] = ColStr[i]
+	}
+	return r
+}
 
 // SplitCoord splits a coordinate string into column and
 // row. (For example "AA19" is split into "AA" & "19")
@@ -62,6 +79,29 @@ func colStr(i int) string {
 			[]string{string(mod + 64)}, letters...)
 	}
 	return strings.Join(letters, "")
+}
+
+// GetCell returns a cell based on coordinate string.
+func GetCell(sheet *xlsx.Sheet, coord string) (
+	*xlsx.Cell, error) {
+	colS, rowI, err := SplitCoord(coord)
+	if err != nil {
+		return nil, fmt.Errorf("GetCell: %v", err)
+	}
+	n := len(sheet.Rows)
+	if rowI > n {
+		return nil, fmt.Errorf(
+			"GetCell: row %d out of range of sheet (max %d)",
+			rowI, n)
+	}
+	row := sheet.Rows[rowI-1]
+	n = len(row.Cells)
+	colI, ok := StrCol[colS]
+	if !ok || colI > n {
+		return nil, fmt.Errorf(
+			"GetCell: column %q out of range (max %d)", colS, n)
+	}
+	return row.Cells[colI-1], nil
 }
 
 // Abs converts a coordinate to an absolute coordinate
