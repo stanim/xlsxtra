@@ -81,29 +81,6 @@ func colStr(i int) string {
 	return strings.Join(letters, "")
 }
 
-// GetCell returns a cell based on coordinate string.
-func GetCell(sheet *xlsx.Sheet, coord string) (
-	*xlsx.Cell, error) {
-	colS, rowI, err := SplitCoord(coord)
-	if err != nil {
-		return nil, fmt.Errorf("GetCell: %v", err)
-	}
-	n := len(sheet.Rows)
-	if rowI > n {
-		return nil, fmt.Errorf(
-			"GetCell: row %d out of range of sheet (max %d)",
-			rowI, n)
-	}
-	row := sheet.Rows[rowI-1]
-	n = len(row.Cells)
-	colI, ok := StrCol[colS]
-	if !ok || colI > n {
-		return nil, fmt.Errorf(
-			"GetCell: column %q out of range (max %d)", colS, n)
-	}
-	return row.Cells[colI-1], nil
-}
-
 // Abs converts a coordinate to an absolute coordinate
 // (An invalid string is returned unaltered.)
 func Abs(s string) string {
@@ -122,10 +99,10 @@ func Abs(s string) string {
 // min_col, min_row, max_col, max_row.
 // Cell coordinates will be converted into a range with
 // the cell at both end.
-func RangeBounds(s string) (int, int, int, int, error) {
-	m := reRange.FindStringSubmatch(s)
+func RangeBounds(rg string) (int, int, int, int, error) {
+	m := reRange.FindStringSubmatch(rg)
 	if m == nil {
-		return 0, 0, 0, 0, fmt.Errorf("Invalid range %q", s)
+		return 0, 0, 0, 0, fmt.Errorf("Invalid range %q", rg)
 	}
 	minCol := StrCol[m[1]]
 	minRow, _ := strconv.Atoi(m[2])
@@ -138,4 +115,85 @@ func RangeBounds(s string) (int, int, int, int, error) {
 		maxRow = minRow
 	}
 	return minCol, minRow, maxCol, maxRow, nil
+}
+
+func checkCell(sheet *xlsx.Sheet, col, row int) (
+	*xlsx.Row, error) {
+	n := len(sheet.Rows)
+	if row > n {
+		return nil, fmt.Errorf(
+			"checkCell: row %d out of range of sheet (max %d)",
+			row, n)
+	}
+	r := sheet.Rows[row-1]
+	n = len(r.Cells)
+	if col > n {
+		return nil, fmt.Errorf(
+			"checkCell: column %d out of range (max %d)",
+			col, n)
+	}
+	return r, nil
+}
+
+// GetCell returns a cell based on coordinate string.
+func GetCell(sheet *xlsx.Sheet, coord string) (
+	*xlsx.Cell, error) {
+	colS, row, err := SplitCoord(coord)
+	if err != nil {
+		return nil, fmt.Errorf("checkCell: %v", err)
+	}
+	col, ok := StrCol[colS]
+	if !ok {
+		return nil, fmt.Errorf("checkCell: column %q overflow",
+			colS)
+	}
+	r, err := checkCell(sheet, col, row)
+	if err != nil {
+		return nil, fmt.Errorf("GetCell: %v", err)
+	}
+	return r.Cells[col-1], nil
+}
+
+// GetCellRange returns all cells by row
+func GetCellRange(sheet *xlsx.Sheet, rg string) (
+	[][]*xlsx.Cell, error) {
+	minCol, minRow, maxCol, maxRow, err := RangeBounds(rg)
+	if err != nil {
+		return nil, fmt.Errorf("GetCellRange: %v", err)
+	}
+	_, err = checkCell(sheet, maxCol, maxRow)
+	if err != nil {
+		return nil, fmt.Errorf("GetCellRange: %v", err)
+	}
+	rows := sheet.Rows
+	nRow := maxRow - minRow + 1
+	nCol := maxCol - minCol + 1
+	result := make([][]*xlsx.Cell, nRow)
+	for r := minRow; r <= maxRow; r++ {
+		row := rows[r-1]
+		cells := make([]*xlsx.Cell, nCol)
+		for col := minCol; col <= maxCol; col++ {
+			cells[col-minCol] = row.Cells[col-1]
+		}
+		result[r-minRow] = cells
+	}
+	return result, nil
+}
+
+// Transpose rows into columns and vice versa
+func Transpose(cells [][]*xlsx.Cell) [][]*xlsx.Cell {
+	rows := len(cells)
+	if rows == 0 {
+		return cells
+	}
+	cols := len(cells[0])
+	result := make([][]*xlsx.Cell, cols)
+	for c := 0; c < cols; c++ {
+		cs := make([]*xlsx.Cell, rows)
+		for r := 0; r < rows; r++ {
+			cs[r] = cells[r][c]
+		}
+		result[c] = cs
+	}
+	return result
 }
