@@ -211,3 +211,18 @@ func CoordAbs(col, row int) string {
 	c := ColStr[col]
 	return Abs(fmt.Sprintf("%s%d", c, row))
 }
+
+// GetRow returns one based row
+func GetRow(sheet *xlsx.Sheet, row int) (
+	*xlsx.Row, error) {
+	if row == 0 {
+		fmt.Println("row", row)
+		return nil, fmt.Errorf("row \"0\" does not exist")
+	}
+	if row > len(sheet.Rows) {
+		return nil, fmt.Errorf(
+			"sheet does not contain row %d (max %d)",
+			row, len(sheet.Rows))
+	}
+	return sheet.Rows[row-1], nil
+}

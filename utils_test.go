@@ -150,14 +150,9 @@ func ExampleGetCellRange() {
 	// |B1|B2|
 }
 
-// TestGetCellRowRange corner cases
-func TestGetCellRange(t *testing.T) {
+func newSheetUtils() *xlsx.Sheet {
 	file := xlsx.NewFile()
-	sheet, err := file.AddSheet("Sheet")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	sheet, _ := file.AddSheet("Sheet")
 	data := [][]string{
 		{"A1", "B1"},
 		{"A2", "B2"},
@@ -168,7 +163,13 @@ func TestGetCellRange(t *testing.T) {
 			xlsxtra.AddString(row, c)
 		}
 	}
-	_, err = xlsxtra.GetCellRange(sheet, "A0:B2")
+	return sheet
+}
+
+// TestGetCellRowRange corner cases
+func TestGetCellRange(t *testing.T) {
+	sheet := newSheetUtils()
+	_, err := xlsxtra.GetCellRange(sheet, "A0:B2")
 	if err == nil {
 		t.Fatal("Expected error as row 0 does not exist")
 	}
@@ -199,4 +200,25 @@ func ExampleCoordAbs() {
 	// Output:
 	// $B$12
 	// ?12
+}
+
+func TestGetRow(t *testing.T) {
+	sheet := newSheetUtils()
+	row, err := xlsxtra.GetRow(sheet, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := row.Cells[0].Value
+	want := "A1"
+	if got != want {
+		t.Fatalf("got %s; want %s", got, want)
+	}
+	_, err = xlsxtra.GetRow(sheet, 0)
+	if err == nil {
+		t.Fatal("Expected error for row 0")
+	}
+	_, err = xlsxtra.GetRow(sheet, 3)
+	if err == nil {
+		t.Fatal("Expected row 3 out of range")
+	}
 }
