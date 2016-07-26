@@ -184,3 +184,19 @@ func TestTranspose(t *testing.T) {
 		t.Fatalf("Expected transpose of empty cell slice to be empty")
 	}
 }
+
+func ExampleCoord() {
+	fmt.Println(xlsxtra.Coord(2, 12))
+	fmt.Println(xlsxtra.Coord(0, 12))
+	// Output:
+	// B12
+	// ?12
+}
+
+func ExampleCoordAbs() {
+	fmt.Println(xlsxtra.CoordAbs(2, 12))
+	fmt.Println(xlsxtra.CoordAbs(0, 12))
+	// Output:
+	// $B$12
+	// ?12
+}

@@ -197,3 +197,17 @@ func Transpose(cells [][]*xlsx.Cell) [][]*xlsx.Cell {
 	}
 	return result
 }
+
+// Coord converts integer col and row to string
+// coordinate. (col is one based.)
+func Coord(col, row int) string {
+	c := ColStr[col]
+	return fmt.Sprintf("%s%d", c, row)
+}
+
+// CoordAbs converts integer col and row to absolute string
+// coordinate. (col is one based.)
+func CoordAbs(col, row int) string {
+	c := ColStr[col]
+	return Abs(fmt.Sprintf("%s%d", c, row))
+}
