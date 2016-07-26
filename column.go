@@ -12,10 +12,10 @@ import (
 // Col retrieves values by header label from a row
 type Col map[string]int
 
-// NewCol creates a new Col from a col row
-func NewCol(row *xlsx.Row) Col {
+// NewCol creates a new Col from a header row
+func NewCol(header *xlsx.Row) Col {
 	col := make(Col)
-	for i, cell := range row.Cells {
+	for i, cell := range header.Cells {
 		title, _ := cell.String()
 		if title != "" {
 			col[title] = i + 1
