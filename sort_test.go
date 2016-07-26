@@ -28,8 +28,8 @@ func ExampleSort() {
 	}
 	fmt.Println()
 	// by header
-	headers := xlsxtra.NewHeaders(sheet.Rows[0])
-	err = xlsxtra.SortByHeaders(sheet, 1, -1, headers,
+	col := xlsxtra.NewCol(sheet.Rows[0])
+	err = xlsxtra.SortByHeaders(sheet, 1, -1, col,
 		"-amount", // reverse order
 		"first_name",
 	)
@@ -75,8 +75,8 @@ func TestSort(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	headers := xlsxtra.NewHeaders(sheet.Rows[0])
-	err = xlsxtra.SortByHeaders(sheet, 1, -1, headers,
+	col := xlsxtra.NewCol(sheet.Rows[0])
+	err = xlsxtra.SortByHeaders(sheet, 1, -1, col,
 		"not existing",
 	)
 	if err == nil {

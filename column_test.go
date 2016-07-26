@@ -20,9 +20,9 @@ func ExampleCol() {
 		return
 	}
 	// column header
-	var titles = []string{"item", "price", "amount", "total"}
+	var headers = []string{"item", "price", "amount", "total"}
 	header := sheet.AddRow()
-	for _, title := range titles {
+	for _, title := range headers {
 		xlsxtra.AddString(header, title)
 	}
 	style := xlsxtra.NewStyle(
@@ -65,7 +65,7 @@ type Data struct {
 	s       string
 }
 
-func newSheet(t *testing.T, titles []string,
+func newSheet(t *testing.T, headers []string,
 	data []Data) *xlsx.Sheet {
 	sheet, err := xlsx.NewFile().AddSheet("Sheet1")
 	if err != nil {
@@ -73,7 +73,7 @@ func newSheet(t *testing.T, titles []string,
 	}
 	// column header titles
 	header := sheet.AddRow()
-	for _, title := range titles {
+	for _, title := range headers {
 		xlsxtra.AddString(header, title)
 	}
 	// table data
@@ -227,7 +227,7 @@ func checkErrors(t *testing.T, data []Data,
 
 func TestCol(t *testing.T) {
 	var (
-		titles = []string{
+		headers = []string{
 			"bool", "float", "formula", "int", "string",
 			"empty1", "empty2"}
 		data = []Data{
@@ -236,7 +236,7 @@ func TestCol(t *testing.T) {
 		}
 	)
 	// create sheet
-	sheet := newSheet(t, titles, data)
+	sheet := newSheet(t, headers, data)
 	header := sheet.Rows[0]
 	row1 := sheet.Rows[1]
 	row2 := sheet.Rows[2]

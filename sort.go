@@ -25,8 +25,8 @@ func Sort(sheet *xlsx.Sheet, start, end int,
 // titles. (If a header title is prefixed by "-", it will
 // be reversed sorted.)
 func SortByHeaders(sheet *xlsx.Sheet, start, end int,
-	headers Headers, titles ...string) error {
-	indices, err := headers.Indices(titles...)
+	col Col, headers ...string) error {
+	indices, err := col.Indices(headers...)
 	if err != nil {
 		return err
 	}

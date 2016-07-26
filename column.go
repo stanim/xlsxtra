@@ -10,32 +10,61 @@ import (
 )
 
 // Col retrieves values by header label from a row
-type Col struct {
-	headers Headers
-}
+type Col map[string]int
 
-// NewCol creates a new Col from a header row
+// NewCol creates a new Col from a col row
 func NewCol(row *xlsx.Row) Col {
-	return Col{
-		headers: NewHeaders(row),
+	col := make(Col)
+	for i, cell := range row.Cells {
+		title, _ := cell.String()
+		if title != "" {
+			col[title] = i + 1
+			col[fmt.Sprintf("-%s", title)] = -col[title]
+		}
 	}
+	return col
 }
 
-func (c Col) index(
+// Index of a given column header title
+func (c Col) Index(title string) (int, error) {
+	if i, ok := c[title]; ok {
+		return i, nil
+	}
+	return 0, fmt.Errorf("Unknown column header: %s (%#v)",
+		title, c)
+}
+
+// Indices of given column header titles
+func (c Col) Indices(headers ...string) (
+	[]int, error) {
+	indices := make([]int, len(headers))
+	for i, title := range headers {
+		index, err := c.Index(title)
+		if err != nil {
+			return []int{}, err
+		}
+		indices[i] = index
+	}
+	return indices, nil
+}
+
+// IndexRow returns index of a given column header title
+// inside a row.
+func (c Col) IndexRow(
 	row *xlsx.Row, title string) (int, error) {
-	i, err := c.headers.Index(title)
+	i, err := c.Index(title)
 	if err != nil {
 		return 0, err
 	}
-	i-- // headers is one based
-	if i < len(row.Cells) {
+	if i <= len(row.Cells) {
 		return i, nil
 	}
 	return i, fmt.Errorf(
-		`Index %d out of range for column title: %s
+		`IndexRow: Index %d out of range for column title: %s
 Try to set a value in a column to the far right.
-[%s]`,
-		i, title, strings.Join(ToString(row), "|"))
+[%d][%s]`,
+		i, title, len(row.Cells),
+		strings.Join(ToString(row), "|"))
 }
 
 // Bool value of (row,col) in spreadsheet
@@ -66,21 +95,21 @@ func (c Col) BoolMap(row *xlsx.Row, headers []string) (
 // Int value of (row,col) in spreadsheet
 func (c Col) Int(row *xlsx.Row, header string) (int,
 	error) {
-	i, err := c.index(row, header)
+	i, err := c.IndexRow(row, header)
 	if err != nil {
 		return 0, err
 	}
-	return row.Cells[i].Int()
+	return row.Cells[i-1].Int()
 }
 
 // Float value of (row,col) in spreadsheet
 func (c Col) Float(row *xlsx.Row, header string) (float64,
 	error) {
-	i, err := c.index(row, header)
+	i, err := c.IndexRow(row, header)
 	if err != nil {
 		return 0, err
 	}
-	val := row.Cells[i].Value
+	val := row.Cells[i-1].Value
 	if strings.HasPrefix(val, "€") ||
 		strings.HasPrefix(val, "$") {
 		val = strings.TrimLeft(val, "€$ ")
@@ -95,7 +124,7 @@ func (c Col) Float(row *xlsx.Row, header string) (float64,
 // String value of (row,col) in spreadsheet
 func (c Col) String(row *xlsx.Row, header string) (string,
 	error) {
-	i, err := c.index(row, header)
+	i, err := c.IndexRow(row, header)
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +133,7 @@ func (c Col) String(row *xlsx.Row, header string) (string,
 			return "", nil
 		}
 	**/
-	return row.Cells[i].String()
+	return row.Cells[i-1].String()
 }
 
 // StringFloatMap converts column with days string into
