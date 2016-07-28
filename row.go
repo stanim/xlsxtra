@@ -2,28 +2,33 @@ package xlsxtra
 
 import "github.com/tealeg/xlsx"
 
+// Row of a sheet
+type Row struct {
+	*xlsx.Row
+}
+
 // AddBool adds a cell with bool as 1 or 0 to a row
-func AddBool(row *xlsx.Row, x ...bool) *xlsx.Cell {
+func (row *Row) AddBool(x ...bool) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range x {
 		if y {
-			cell = AddInt(row, 1)
+			cell = row.AddInt(1)
 		} else {
-			cell = AddInt(row, 0)
+			cell = row.AddInt(0)
 		}
 	}
 	return cell
 }
 
 // AddEmpty adds n empty cells to a row
-func AddEmpty(row *xlsx.Row, n int) {
+func (row *Row) AddEmpty(n int) {
 	for i := 0; i < n; i++ {
 		row.AddCell()
 	}
 }
 
 // AddFloat adds a cell with float64 value to a row
-func AddFloat(row *xlsx.Row, format string, x ...float64,
+func (row *Row) AddFloat(format string, x ...float64,
 ) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range x {
@@ -34,7 +39,7 @@ func AddFloat(row *xlsx.Row, format string, x ...float64,
 }
 
 // AddFormula adds a cell with formula to a row
-func AddFormula(row *xlsx.Row, format string,
+func (row *Row) AddFormula(format string,
 	formula ...string) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range formula {
@@ -46,7 +51,7 @@ func AddFormula(row *xlsx.Row, format string,
 }
 
 // AddInt adds a cell with int value to a row
-func AddInt(row *xlsx.Row, x ...int) *xlsx.Cell {
+func (row *Row) AddInt(x ...int) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range x {
 		cell = row.AddCell()
@@ -56,7 +61,7 @@ func AddInt(row *xlsx.Row, x ...int) *xlsx.Cell {
 }
 
 // AddString adds a cell with string value to a row
-func AddString(row *xlsx.Row, x ...string) *xlsx.Cell {
+func (row *Row) AddString(x ...string) *xlsx.Cell {
 	var cell *xlsx.Cell
 	for _, y := range x {
 		cell = row.AddCell()
@@ -65,11 +70,27 @@ func AddString(row *xlsx.Row, x ...string) *xlsx.Cell {
 	return cell
 }
 
+// SetStyle set style to all cells of a row
+func (row *Row) SetStyle(style *xlsx.Style) {
+	for _, cell := range row.Cells {
+		cell.SetStyle(style)
+	}
+}
+
 // ToString converts row to string slice
-func ToString(row *xlsx.Row) []string {
-	s := make([]string, len(row.Cells))
-	for i, cell := range row.Cells {
+func ToString(cells []*xlsx.Cell) []string {
+	s := make([]string, len(cells))
+	for i, cell := range cells {
 		s[i] = cell.Value
 	}
 	return s
+}
+
+// Rows converts slice of xlsx.Row into Row
+func Rows(rows []*xlsx.Row) []*Row {
+	r := make([]*Row, len(rows))
+	for i, row := range rows {
+		r[i] = &Row{row}
+	}
+	return r
 }

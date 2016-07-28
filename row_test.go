@@ -17,7 +17,7 @@ func ExampleToString() {
 	for _, title := range headers {
 		row.AddCell().SetString(title)
 	}
-	fmt.Printf("%v", xlsxtra.ToString(row))
+	fmt.Printf("%v", xlsxtra.ToString(row.Cells))
 	// Output:
 	// [Rob Robert Ken]
 }

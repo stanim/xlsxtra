@@ -117,69 +117,6 @@ func RangeBounds(rg string) (int, int, int, int, error) {
 	return minCol, minRow, maxCol, maxRow, nil
 }
 
-func checkCell(sheet *xlsx.Sheet, col, row int) (
-	*xlsx.Row, error) {
-	n := len(sheet.Rows)
-	if row > n {
-		return nil, fmt.Errorf(
-			"checkCell: row %d out of range of sheet (max %d)",
-			row, n)
-	}
-	r := sheet.Rows[row-1]
-	n = len(r.Cells)
-	if col > n {
-		return nil, fmt.Errorf(
-			"checkCell: column %d out of range (max %d)",
-			col, n)
-	}
-	return r, nil
-}
-
-// GetCell returns a cell based on coordinate string.
-func GetCell(sheet *xlsx.Sheet, coord string) (
-	*xlsx.Cell, error) {
-	colS, row, err := SplitCoord(coord)
-	if err != nil {
-		return nil, fmt.Errorf("checkCell: %v", err)
-	}
-	col, ok := StrCol[colS]
-	if !ok {
-		return nil, fmt.Errorf("checkCell: column %q overflow",
-			colS)
-	}
-	r, err := checkCell(sheet, col, row)
-	if err != nil {
-		return nil, fmt.Errorf("GetCell: %v", err)
-	}
-	return r.Cells[col-1], nil
-}
-
-// GetCellRange returns all cells by row
-func GetCellRange(sheet *xlsx.Sheet, rg string) (
-	[][]*xlsx.Cell, error) {
-	minCol, minRow, maxCol, maxRow, err := RangeBounds(rg)
-	if err != nil {
-		return nil, fmt.Errorf("GetCellRange: %v", err)
-	}
-	_, err = checkCell(sheet, maxCol, maxRow)
-	if err != nil {
-		return nil, fmt.Errorf("GetCellRange: %v", err)
-	}
-	rows := sheet.Rows
-	nRow := maxRow - minRow + 1
-	nCol := maxCol - minCol + 1
-	result := make([][]*xlsx.Cell, nRow)
-	for r := minRow; r <= maxRow; r++ {
-		row := rows[r-1]
-		cells := make([]*xlsx.Cell, nCol)
-		for col := minCol; col <= maxCol; col++ {
-			cells[col-minCol] = row.Cells[col-1]
-		}
-		result[r-minRow] = cells
-	}
-	return result, nil
-}
-
 // Transpose rows into columns and vice versa
 func Transpose(cells [][]*xlsx.Cell) [][]*xlsx.Cell {
 	rows := len(cells)
@@ -210,19 +147,4 @@ func Coord(col, row int) string {
 func CoordAbs(col, row int) string {
 	c := ColStr[col]
 	return Abs(fmt.Sprintf("%s%d", c, row))
-}
-
-// GetRow returns one based row
-func GetRow(sheet *xlsx.Sheet, row int) (
-	*xlsx.Row, error) {
-	if row == 0 {
-		fmt.Println("row", row)
-		return nil, fmt.Errorf("row \"0\" does not exist")
-	}
-	if row > len(sheet.Rows) {
-		return nil, fmt.Errorf(
-			"sheet does not contain row %d (max %d)",
-			row, len(sheet.Rows))
-	}
-	return sheet.Rows[row-1], nil
 }

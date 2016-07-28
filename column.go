@@ -5,17 +5,15 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	"github.com/tealeg/xlsx"
 )
 
 // Col retrieves values by header label from a row
 type Col map[string]int
 
 // NewCol creates a new Col from a header row
-func NewCol(header *xlsx.Row) Col {
+func NewCol(sheet *Sheet, row int) Col {
 	col := make(Col)
-	for i, cell := range header.Cells {
+	for i, cell := range sheet.Row(row).Cells {
 		title, _ := cell.String()
 		if title != "" {
 			col[title] = i + 1
@@ -51,7 +49,7 @@ func (c Col) Indices(headers ...string) (
 // IndexRow returns index of a given column header title
 // inside a row.
 func (c Col) IndexRow(
-	row *xlsx.Row, title string) (int, error) {
+	row *Row, title string) (int, error) {
 	i, err := c.Index(title)
 	if err != nil {
 		return 0, err
@@ -64,11 +62,11 @@ func (c Col) IndexRow(
 Try to set a value in a column to the far right.
 [%d][%s]`,
 		i, title, len(row.Cells),
-		strings.Join(ToString(row), "|"))
+		strings.Join(ToString(row.Cells), "|"))
 }
 
 // Bool value of (row,col) in spreadsheet
-func (c Col) Bool(row *xlsx.Row, header string) (bool,
+func (c Col) Bool(row *Row, header string) (bool,
 	error) {
 	val, err := c.String(row, header)
 	if err != nil {
@@ -79,7 +77,7 @@ func (c Col) Bool(row *xlsx.Row, header string) (bool,
 }
 
 // BoolMap value of (row,col) in spreadsheet
-func (c Col) BoolMap(row *xlsx.Row, headers []string) (
+func (c Col) BoolMap(row *Row, headers []string) (
 	map[string]bool, error) {
 	var err error
 	bmap := make(map[string]bool)
@@ -93,7 +91,7 @@ func (c Col) BoolMap(row *xlsx.Row, headers []string) (
 }
 
 // Int value of (row,col) in spreadsheet
-func (c Col) Int(row *xlsx.Row, header string) (int,
+func (c Col) Int(row *Row, header string) (int,
 	error) {
 	i, err := c.IndexRow(row, header)
 	if err != nil {
@@ -103,7 +101,7 @@ func (c Col) Int(row *xlsx.Row, header string) (int,
 }
 
 // Float value of (row,col) in spreadsheet
-func (c Col) Float(row *xlsx.Row, header string) (float64,
+func (c Col) Float(row *Row, header string) (float64,
 	error) {
 	i, err := c.IndexRow(row, header)
 	if err != nil {
@@ -122,7 +120,7 @@ func (c Col) Float(row *xlsx.Row, header string) (float64,
 }
 
 // String value of (row,col) in spreadsheet
-func (c Col) String(row *xlsx.Row, header string) (string,
+func (c Col) String(row *Row, header string) (string,
 	error) {
 	i, err := c.IndexRow(row, header)
 	if err != nil {
@@ -138,7 +136,7 @@ func (c Col) String(row *xlsx.Row, header string) (string,
 
 // StringFloatMap converts column with days string into
 // a map of floats.
-func (c Col) StringFloatMap(row *xlsx.Row, header string,
+func (c Col) StringFloatMap(row *Row, header string,
 	dmap map[string]float64, val float64, sep string,
 	chars int) error {
 	// days

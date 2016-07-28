@@ -14,7 +14,7 @@ func ExampleCol() {
 		Price  float64
 		Amount int
 	}
-	sheet, err := xlsx.NewFile().AddSheet("Shopping Basket")
+	sheet, err := xlsxtra.NewFile().AddSheet("Basket")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -23,7 +23,7 @@ func ExampleCol() {
 	var headers = []string{"item", "price", "amount", "total"}
 	header := sheet.AddRow()
 	for _, title := range headers {
-		xlsxtra.AddString(header, title)
+		header.AddString(title)
 	}
 	style := xlsxtra.NewStyle(
 		"00ff0000", // color
@@ -31,23 +31,23 @@ func ExampleCol() {
 		nil, // border
 		nil, // alignment
 	)
-	xlsxtra.SetRowStyle(header, style)
+	header.SetStyle(style)
 	// items
 	var items = []Item{
 		{"chocolate", 4.99, 2},
 		{"cookies", 6.45, 3},
 	}
-	var row *xlsx.Row
+	var row *xlsxtra.Row
 	for i, item := range items {
 		row = sheet.AddRow()
-		xlsxtra.AddString(row, item.Name)
-		xlsxtra.AddFloat(row, "0.00", item.Price)
-		xlsxtra.AddInt(row, item.Amount)
-		xlsxtra.AddFormula(row, "0.00",
+		row.AddString(item.Name)
+		row.AddFloat("0.00", item.Price)
+		row.AddInt(item.Amount)
+		row.AddFormula("0.00",
 			fmt.Sprintf("B%d*C%d", i+1, i+1))
 	}
 	// column Col type
-	col := xlsxtra.NewCol(header)
+	col := xlsxtra.NewCol(sheet, 1)
 	price, err := col.Float(row, "price")
 	if err != nil {
 		fmt.Println(err)
@@ -66,33 +66,33 @@ type Data struct {
 }
 
 func newSheet(t *testing.T, headers []string,
-	data []Data) *xlsx.Sheet {
-	sheet, err := xlsx.NewFile().AddSheet("Sheet1")
+	data []Data) *xlsxtra.Sheet {
+	sheet, err := xlsxtra.NewFile().AddSheet("Sheet1")
 	if err != nil {
 		t.Fatal(err)
 	}
 	// column header titles
 	header := sheet.AddRow()
 	for _, title := range headers {
-		xlsxtra.AddString(header, title)
+		header.AddString(title)
 	}
 	// table data
 	for _, d := range data {
 		row := sheet.AddRow()
-		xlsxtra.AddBool(row, d.b)
-		xlsxtra.AddFloat(row, "0.00", d.f)
-		xlsxtra.AddFormula(row, "0.00", d.formula)
-		xlsxtra.AddInt(row, d.i)
-		xlsxtra.AddString(row, d.s)
-		xlsxtra.AddEmpty(row, 2)
+		row.AddBool(d.b)
+		row.AddFloat("0.00", d.f)
+		row.AddFormula("0.00", d.formula)
+		row.AddInt(d.i)
+		row.AddString(d.s)
+		row.AddEmpty(2)
 	}
 	row := sheet.AddRow()
-	xlsxtra.AddBool(row, false)
+	row.AddBool(false)
 	return sheet
 }
 
 func checkBool(t *testing.T, data []Data, col xlsxtra.Col,
-	row1, row2 *xlsx.Row) {
+	row1, row2 *xlsxtra.Row) {
 	// (bool)map
 	bmGot, err := col.BoolMap(row1, []string{"bool"})
 	if err != nil {
@@ -116,7 +116,7 @@ func checkBool(t *testing.T, data []Data, col xlsxtra.Col,
 }
 
 func checkFloat(t *testing.T, data []Data, col xlsxtra.Col,
-	row1, row2 *xlsx.Row) {
+	row1, row2 *xlsxtra.Row) {
 	fGot, err := col.Float(row1, "float")
 	if err != nil {
 		t.Fatal(err)
@@ -142,7 +142,7 @@ func checkFloat(t *testing.T, data []Data, col xlsxtra.Col,
 }
 
 func checkInt(t *testing.T, data []Data, col xlsxtra.Col,
-	row1, row2 *xlsx.Row) {
+	row1, row2 *xlsxtra.Row) {
 	iGot, err := col.Int(row1, "int")
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func checkInt(t *testing.T, data []Data, col xlsxtra.Col,
 }
 
 func checkString(t *testing.T, data []Data,
-	col xlsxtra.Col, row1 *xlsx.Row) {
+	col xlsxtra.Col, row1 *xlsxtra.Row) {
 	// (string)floatMap
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
@@ -182,7 +182,7 @@ func checkString(t *testing.T, data []Data,
 }
 
 func checkEmpty(t *testing.T, col xlsxtra.Col,
-	row1 *xlsx.Row) {
+	row1 *xlsxtra.Row) {
 	for _, empty := range []string{"empty1", "empty2"} {
 		sGot, err := col.String(row1, empty)
 		if err != nil {
@@ -197,7 +197,7 @@ func checkEmpty(t *testing.T, col xlsxtra.Col,
 }
 
 func checkErrors(t *testing.T, data []Data,
-	col xlsxtra.Col, row1, row3 *xlsx.Row) {
+	col xlsxtra.Col, row1, row3 *xlsxtra.Row) {
 	sfmGot := make(map[string]float64)
 	sWant := 1.0
 	// out of range
@@ -237,11 +237,10 @@ func TestCol(t *testing.T) {
 	)
 	// create sheet
 	sheet := newSheet(t, headers, data)
-	header := sheet.Rows[0]
-	row1 := sheet.Rows[1]
-	row2 := sheet.Rows[2]
-	row3 := sheet.Rows[3]
-	col := xlsxtra.NewCol(header)
+	row1 := sheet.Row(2)
+	row2 := sheet.Row(3)
+	row3 := sheet.Row(4)
+	col := xlsxtra.NewCol(sheet, 1)
 	// check
 	checkBool(t, data, col, row1, row2)
 	checkFloat(t, data, col, row1, row2)

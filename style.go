@@ -43,10 +43,3 @@ func NewStyles(colors []string, font *xlsx.Font,
 	}
 	return styles
 }
-
-// SetRowStyle set style to all cells of a row
-func SetRowStyle(row *xlsx.Row, style *xlsx.Style) {
-	for _, cell := range row.Cells {
-		cell.SetStyle(style)
-	}
-}

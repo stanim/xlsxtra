@@ -15,7 +15,7 @@ var (
 // Sort sheet rows according to multi column. (Note that
 // columns are one based, not zero based to make reverse
 // sort possible.)
-func Sort(sheet *xlsx.Sheet, start, end int,
+func Sort(sheet *Sheet, start, end int,
 	columns ...int) {
 	m := NewMultiColumnSort(sheet, start, end)
 	m.Sort(columns...)
@@ -24,7 +24,7 @@ func Sort(sheet *xlsx.Sheet, start, end int,
 // SortByHeaders sort sheet rows by multiple column header
 // titles. (If a header title is prefixed by "-", it will
 // be reversed sorted.)
-func SortByHeaders(sheet *xlsx.Sheet, start, end int,
+func SortByHeaders(sheet *Sheet, start, end int,
 	col Col, headers ...string) error {
 	indices, err := col.Indices(headers...)
 	if err != nil {
@@ -40,14 +40,14 @@ func SortByHeaders(sheet *xlsx.Sheet, start, end int,
 // which are selected by begin and end indices. If End is
 // is -1, the last row of the sheet will be selected.
 type MultiColumnSort struct {
-	Sheet      *xlsx.Sheet
+	Sheet      *Sheet
 	Columns    []int
 	Start, End int
 }
 
 // NewMultiColumnSort creates a new multi column sorter.
 func NewMultiColumnSort(
-	sheet *xlsx.Sheet, start, end int) *MultiColumnSort {
+	sheet *Sheet, start, end int) *MultiColumnSort {
 	return &MultiColumnSort{
 		Sheet: sheet,
 		Start: start,

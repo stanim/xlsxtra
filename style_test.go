@@ -7,7 +7,7 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-func checkStyle(t *testing.T, row *xlsx.Row) {
+func checkStyle(t *testing.T, row *xlsxtra.Row) {
 	style := xlsxtra.NewStyle(
 		"", // color
 		&xlsx.Font{Size: 10, Name: "Arial", Bold: true},
@@ -33,7 +33,7 @@ func checkStyle(t *testing.T, row *xlsx.Row) {
 	if !style.ApplyAlignment {
 		t.Fatal("NewStyle: ApplyAlignment expected")
 	}
-	xlsxtra.SetRowStyle(row, style)
+	row.SetStyle(style)
 	for _, cell := range row.Cells {
 		style = cell.GetStyle()
 		if style.ApplyFill {
@@ -52,13 +52,13 @@ func checkStyle(t *testing.T, row *xlsx.Row) {
 }
 
 func TestNewStyle(t *testing.T) {
-	sheet, err := xlsx.NewFile().AddSheet("Sheet1")
+	sheet, err := xlsxtra.NewFile().AddSheet("Sheet1")
 	if err != nil {
 		t.Fatal(err)
 	}
 	row := sheet.AddRow()
-	xlsxtra.AddString(row, "foo")
-	xlsxtra.AddInt(row, 2)
+	row.AddString("foo")
+	row.AddInt(2)
 	checkStyle(t, row)
 }
 

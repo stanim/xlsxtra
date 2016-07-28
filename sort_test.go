@@ -24,11 +24,12 @@ func ExampleSort() {
 		6,  // ip address
 	)
 	for _, row := range sheet.Rows {
-		fmt.Println(strings.Join(xlsxtra.ToString(row), ", "))
+		fmt.Println(
+			strings.Join(xlsxtra.ToString(row.Cells), ", "))
 	}
 	fmt.Println()
 	// by header
-	col := xlsxtra.NewCol(sheet.Rows[0])
+	col := xlsxtra.NewCol(sheet, 1)
 	err = xlsxtra.SortByHeaders(sheet, 1, -1, col,
 		"-amount", // reverse order
 		"first_name",
@@ -38,7 +39,7 @@ func ExampleSort() {
 		return
 	}
 	for _, row := range sheet.Rows {
-		fmt.Println(strings.Join(xlsxtra.ToString(row), ", "))
+		fmt.Println(strings.Join(xlsxtra.ToString(row.Cells), ", "))
 	}
 
 	// Output:
@@ -75,7 +76,7 @@ func TestSort(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	col := xlsxtra.NewCol(sheet.Rows[0])
+	col := xlsxtra.NewCol(sheet, 1)
 	err = xlsxtra.SortByHeaders(sheet, 1, -1, col,
 		"not existing",
 	)
